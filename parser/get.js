@@ -4,7 +4,7 @@ var request=require('request')
   , fs=require('fs')
   , url='http://www.fcyt.umss.edu.bo/horarios/'
   , join=require('path').join
-  , gestion='2015-01'
+  , gestion='2017-02'
   , path=join(__dirname,'..','data','FCyT',gestion)
   , regex=/<a href="(.*)">(.*\.pdf)<\/a>/g
 
