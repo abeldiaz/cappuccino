@@ -1,37 +1,50 @@
-'use strict';
+if(process.argv.length<3){
+    console.log('no parameters found');
+    process.exit(1);
+}
 
-var request=require('request')
+const request=require('request')
   , fs=require('fs')
-  , url='http://www.fcyt.umss.edu.bo/horarios/'
   , join=require('path').join
-  , gestion='2017-02'
+  , url='http://www.fcyt.umss.edu.bo/horarios/'
+  , gestion=process.argv[2]
   , path=join(__dirname,'..','data','FCyT',gestion)
   , regex=/<a href="(.*)">(.*\.pdf)<\/a>/g
+  , get=()=>{
+        console.log('request fcyt index ...');
+        request(url,(error,response,body)=>{
+            if(error){
+                throw error;
+            }
 
-// TODO check if directory exists
+            console.log('parsing fcyt index ...');
+            if(response.statusCode==200){
+                var buffer=new Array()
+                  , result
 
-console.log('request fcyt index ...');
-request(url,function(error,response,body){
-    if(error){throw error}
+                while((result=regex.exec(body))!==null){
+                    buffer.push({
+                        name:result[2]
+                      , url:result[1]
+                    });
+                }
 
-    console.log('parsing fcyt index ...');
-    if(response.statusCode==200){
-        var buffer=new Array()
-          , result
-
-        while((result=regex.exec(body))!==null){
-            buffer.push({
-                name:result[2]
-              , url:result[1]
-            });
-        }
-
-        buffer.forEach(function(element){
-            console.log('saved: '+element.name);
-            request(element.url).pipe(
-                fs.createWriteStream(join(path,element.name)));
+                buffer.forEach((element)=>{
+                    console.log('saved: '+element.name);
+                    request(element.url).pipe(
+                        fs.createWriteStream(join(path,element.name)));
+                });
+            }
         });
     }
-});
 
+fs.stat(path,(error,stats)=>{
+    if(error){
+        fs.mkdir(path,(error)=>{
+            get();
+        });
+    }else{
+        get();
+    }
+});
 
